@@ -1,0 +1,11 @@
+version: "3"
+
+tasks:
+  serve:
+    cmds:
+    - poetry run uvicorn server:app --host 0.0.0.0 --port 8000
+    desc: "Start the FastAPI server"
+  install-deps:
+    cmds:
+    - poetry install
+    desc: "Install project dependencies using Poetry"
