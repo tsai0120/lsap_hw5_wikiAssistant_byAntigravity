@@ -6,10 +6,12 @@ from utils import (
     get_wiki_text_from_url,
     split_text_into_chunks,
     query_chunks_with_query,
-    search_for_wikipedia_page_url
+    search_for_wikipedia_page_url,
 )
 
 app = FastAPI()
+
+chat_history = []  # In-memory chat history storage
 
 
 @app.get("/")
@@ -37,3 +39,22 @@ def explore_relevant_wiki_pages(query: str) -> dict[str, Union[list[str] | str, 
         return {"page_urls": page_urls}
     except Exception as e:
         return {"error": str(e)}
+
+
+@app.get("/history")
+def get_history() -> dict[str, list[dict[str, str]]]:
+    return {"chat_history": chat_history}
+
+
+@app.post("/history")
+def modify_history(history: list[dict[str, str]]) -> dict[str, str]:
+    global chat_history
+    chat_history = history
+    return {"message": "Chat history updated successfully"}
+
+
+@app.delete("/history")
+def clear_history() -> dict[str, str]:
+    global chat_history
+    chat_history = []
+    return {"message": "Chat history cleared successfully"}

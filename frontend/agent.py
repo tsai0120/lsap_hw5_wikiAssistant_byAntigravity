@@ -3,12 +3,11 @@ import dspy
 import requests
 import os
 
-backend_url = "http://localhost:8000"
 
 load_dotenv()
 
-lm = dspy.LM("gemini/gemini-2.5-flash", api_key=os.getenv("GEMINI_API_KEY"))
-dspy.configure(lm=lm)
+from config import BACKEND_URL
+
 
 
 def search_for_relevant_wiki_pages(keyword: str) -> list[str]:
@@ -21,7 +20,7 @@ def search_for_relevant_wiki_pages(keyword: str) -> list[str]:
     """
 
 
-    response = requests.get(f"{backend_url}/explore", params={"query": keyword})
+    response = requests.get(f"{BACKEND_URL}/explore", params={"query": keyword})
     if response.status_code != 200:
         raise ValueError(f"Error searching for Wikipedia pages: {response.text}")
     data = response.json()
@@ -31,7 +30,7 @@ def search_for_relevant_wiki_pages(keyword: str) -> list[str]:
 def search_for_relevant_chunks(url: str, query: str) -> list[str]:
     """Search for relevant chunks in a Wikipedia page given a URL and query."""
 
-    response = requests.get(f"{backend_url}/query", params={"url": url, "query": query})
+    response = requests.get(f"{BACKEND_URL}/query", params={"url": url, "query": query})
     if response.status_code != 200:
         raise ValueError(f"Error querying Wikipedia page: {response.text}")
     data = response.json()
