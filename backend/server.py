@@ -23,8 +23,15 @@ def load_data():
     if os.path.exists(HISTORY_FILE):
         try:
             with open(HISTORY_FILE, "r") as f:
-                return json.load(f)
-        except Exception:
+                data = json.load(f)
+                # Check if data is in the new format (dict with "sessions")
+                if isinstance(data, dict) and "sessions" in data:
+                    return data
+                # If it's a list (old format) or other invalid format, reset
+                print("Detected old or invalid data format. Resetting chat history.")
+                return {"sessions": {}}
+        except Exception as e:
+            print(f"Error loading data: {e}. Resetting chat history.")
             return {"sessions": {}}
     return {"sessions": {}}
 
