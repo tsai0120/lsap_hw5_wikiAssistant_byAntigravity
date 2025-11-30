@@ -18,19 +18,21 @@ def get_wiki_text_from_url(url: str) -> str:
     if not response.ok:
         # fallback to mobile Wikipedia if available
         if "wikipedia.org" in url:
-            mobile_url = url.replace("en.wikipedia.org", "en.m.wikipedia.org")
-            try:
-                response = session.get(
-                    mobile_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10
-                )
-            except requests.RequestException as e:
-                raise ValueError(
-                    f"Failed to retrieve content from URL: {url}. Error: {e}"
-                )
-            if not response.ok:
-                raise ValueError(
-                    f"Failed to retrieve content from URL: {url}. Status: {response.status_code} {response.reason}"
-                )
+            # Try to convert to mobile URL generically
+            if ".m.wikipedia.org" not in url:
+                mobile_url = url.replace(".wikipedia.org", ".m.wikipedia.org")
+                try:
+                    response = session.get(
+                        mobile_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10
+                    )
+                except requests.RequestException as e:
+                    raise ValueError(
+                        f"Failed to retrieve content from URL: {url}. Error: {e}"
+                    )
+                if not response.ok:
+                    raise ValueError(
+                        f"Failed to retrieve content from URL: {url}. Status: {response.status_code} {response.reason}"
+                    )
         else:
             raise ValueError(
                 f"Failed to retrieve content from URL: {url}. Status: {response.status_code} {response.reason}"
@@ -45,9 +47,9 @@ def get_wiki_text_from_url(url: str) -> str:
     return wiki_text
 
 
-def search_for_wikipedia_page_url(query: str, top_k: int = 3) -> Union[list[str], None]:
+def search_for_wikipedia_page_url(query: str, language: str = "en", top_k: int = 3) -> Union[list[str], None]:
     # search for the most relevant Wikipedia page for the given query using Wikipedia's search API
-    search_url = "https://en.wikipedia.org/w/api.php"
+    search_url = f"https://{language}.wikipedia.org/w/api.php"
     params = {
         "action": "query",
         "list": "search",
@@ -69,7 +71,7 @@ def search_for_wikipedia_page_url(query: str, top_k: int = 3) -> Union[list[str]
     if not search_results:
         return None
     page_urls = [
-        f"https://en.wikipedia.org/wiki/{result['title'].replace(' ', '_')}"
+        f"https://{language}.wikipedia.org/wiki/{result['title'].replace(' ', '_')}"
         for result in search_results
     ]
     return page_urls

@@ -1,142 +1,91 @@
-# Wiki Assistant
+# Wiki Assistant (維基百科助手)
 
-A Wikipedia-powered chat assistant that uses AI to answer questions by searching and analyzing Wikipedia content. The application consists of a FastAPI backend for Wikipedia data processing and a Streamlit frontend for interactive chat.
+這是一個基於 RAG (檢索增強生成) 的 AI 助手，可以回答有關維基百科條目的問題。它使用 Google Gemini 模型來生成回答，並通過檢索維基百科的內容來增強準確性。
 
-## Features
+## 功能特色
 
-- 🔍 **Intelligent Wikipedia Search**: Automatically finds relevant Wikipedia pages based on your queries
-- 🤖 **AI-Powered Responses**: Uses Google's Gemini AI with DSPy framework for intelligent responses
-- 📚 **Semantic Search**: Employs sentence transformers to find the most relevant content chunks
-- 💬 **Chat Interface**: Interactive Streamlit-based chat interface with conversation history
-- ⚡ **Fast API Backend**: Efficient Wikipedia scraping and text processing
+- **智能問答**：使用 Gemini 2.5 Flash 模型回答問題。
+- **多語言支持 (Bonus)**：支持多種語言的維基百科搜索 (包括繁體中文、英文、西班牙文等)。
+- **持久化聊天記錄**：聊天記錄會自動保存，重啟後不會丟失。
+- **Docker 部署**：支持單容器和多容器部署，並包含 Nginx 反向代理配置。
 
-## Architecture
+## 快速開始
 
-The application is split into two main components:
+### 1. 環境設置
 
-- **Backend** (`/backend`): FastAPI server that handles Wikipedia scraping, text chunking, and semantic search
-- **Frontend** (`/frontend`): Streamlit chat interface that interacts with the backend and uses DSPy for AI responses
+首先，請確保您已安裝 Docker 和 Docker Compose。
 
-## Prerequisites
-
-- Python 3.13 or higher
-- [Poetry](https://python-poetry.org/) for dependency management
-- [Task](https://taskfile.dev/) (optional, for easier command execution)
-- Google Gemini API key
-
-## Installation
-
-### 1. Clone the Repository
+複製環境變量範例文件並填入您的 Google AI Studio API Key：
 
 ```bash
-git clone <repository-url>
-cd wiki-assistant
+cp .env.example .env
+# 編輯 .env 文件，填入您的 GEMINI_API_KEY
 ```
 
-### 2. Install Poetry
+### 2. 啟動應用 (推薦)
 
-If you don't have Poetry installed:
+使用 Docker Compose 啟動所有服務 (包含 Frontend, Backend, Nginx)：
 
 ```bash
-curl -sSL https://install.python-poetry.org | python3 -
+docker-compose up --build
 ```
 
-### 3. Install Task (Optional)
+啟動後，您可以訪問以下服務：
 
-If you want to use the Taskfile for easier command execution:
+- **Frontend (前端)**: http://localhost:9500
+- **Backend (後端)**: http://localhost:9000
+- **Nginx (反向代理)**: http://localhost:8080
 
-**macOS:**
+### 3. 使用說明
+
+1. 打開瀏覽器訪問 http://localhost:9500 (或 http://localhost:8080)。
+2. 在左側側邊欄選擇您想要搜尋的維基百科語言 (例如 "zh" 代表中文)。
+3. 在聊天框中輸入您的問題。
+
+## 實作細節
+
+### 系統架構
+
+- **Frontend**: 使用 Streamlit 構建，負責 UI 展示和與用戶交互。使用 DSPy 框架構建 Agent 邏輯。
+- **Backend**: 使用 FastAPI 構建，負責處理維基百科的搜索和內容爬取。
+- **Database**: 使用 JSON 文件 (`data/chat_history.json`) 進行簡單的持久化存儲。
+- **Nginx**: 作為反向代理，將請求轉發到前端容器。
+
+### 改進與優化 (Bonus)
+
+為了提升非英語用戶的體驗，我實作了**多語言支持**功能：
+
+1. **前端改進**：在 Sidebar 新增了語言選擇器。
+2. **Agent 優化**：`WikiAssistantAgent` 現在可以接受語言參數，並將其傳遞給搜索工具。
+3. **後端增強**：
+    - `search_for_wikipedia_page_url` 函數新增 `language` 參數，可動態查詢不同語言的維基百科子網域 (如 `zh.wikipedia.org`)。
+    - `get_wiki_text_from_url` 函數優化了對移動版網頁 (`.m.wikipedia.org`) 的處理邏輯，使其適用於所有語言版本。
+
+### 遇到的問題與解決
+
+在開發過程中，遇到了 Docker Volume 掛載單個文件 (`chat_history.json`) 導致的權限和目錄誤判問題。
+**解決方案**：改為掛載 `data/` 目錄，將聊天記錄文件放在目錄中，這樣 Docker 就不會錯誤地將其創建為目錄，並且更容易管理權限。
+
+## 開發者指南
+
+### 單容器模式
+
+如果您只想運行一個容器：
+
 ```bash
-brew install go-task
+docker build -t wiki-assistant .
+docker run -p 9000:8000 -p 9500:8501 --env-file .env wiki-assistant
 ```
 
-**Other platforms:** See [Task installation guide](https://taskfile.dev/installation/)
-
-### 4. Set Up the Backend
-
-```bash
-cd backend
-task install
-```
-
-### 5. Set Up the Frontend
-
-```bash
-cd ../frontend
-task install
-```
-
-### 6. Configure Environment Variables
-
-Create a `.env` file in the `frontend` directory:
-
-```bash
-cd frontend
-touch .env
-```
-
-Add your Gemini API key to the `.env` file:
-
-```
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-To get a Gemini API key:
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Sign in with your Google account
-3. Create a new API key
-
-## Running the Application
-
-You need to run both the backend and frontend servers.
-
-### Option 1: Using Task (Recommended)
-
-**Terminal 1 - Start Backend:**
-```bash
-cd backend
-task serve
-```
-
-**Terminal 2 - Start Frontend:**
-```bash
-cd frontend
-task serve
-```
-
-## Accessing the Application
-
-Once both servers are running:
-
-- **Frontend (Chat Interface)**: http://localhost:8501
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs (FastAPI auto-generated)
-
-## Usage
-
-1. Open your browser and navigate to http://localhost:8501
-2. Type your question in the chat input
-3. The assistant will:
-   - Search for relevant Wikipedia pages
-   - Extract and analyze relevant content
-   - Provide an AI-generated response based on Wikipedia information
-4. Continue the conversation with follow-up questions
-
-## Project Structure
+### 目錄結構
 
 ```
 wiki-assistant/
-├── backend/
-│   ├── server.py          # FastAPI application
-│   ├── utils.py           # Wikipedia scraping and text processing utilities
-│   ├── pyproject.toml     # Backend dependencies
-│   └── taskfile.yml       # Backend task definitions
-├── frontend/
-│   ├── chat.py            # Streamlit chat interface
-│   ├── agent.py           # DSPy agent with ReAct reasoning
-│   ├── pyproject.toml     # Frontend dependencies
-│   ├── taskfile.yml       # Frontend task definitions
-│   └── .env               # Environment variables (create this)
-└── README.md
+├── backend/            # FastAPI 後端代碼
+├── frontend/           # Streamlit 前端代碼
+├── data/               # 持久化數據目錄
+├── docker-compose.yml  # Docker Compose 配置
+├── Dockerfile*         # 各種 Dockerfile 配置
+├── nginx.conf          # Nginx 配置
+└── README.md           # 項目文檔
 ```
-

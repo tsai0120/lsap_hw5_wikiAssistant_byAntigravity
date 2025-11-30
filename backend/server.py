@@ -11,8 +11,25 @@ from utils import (
 
 app = FastAPI()
 
-chat_history = []  # In-memory chat history storage
+import json
+import os
 
+HISTORY_FILE = "data/chat_history.json"
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+def save_history(history):
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(history, f)
+
+chat_history = load_history()
 
 @app.get("/")
 def read_root() -> dict[str, str]:
@@ -31,9 +48,9 @@ def query_wiki(url: str, query: str) -> dict[str, Union[list[str] | str, None]]:
 
 
 @app.get("/explore")
-def explore_relevant_wiki_pages(query: str) -> dict[str, Union[list[str] | str, None]]:
+def explore_relevant_wiki_pages(query: str, language: str = "en") -> dict[str, Union[list[str] | str, None]]:
     try:
-        page_urls = search_for_wikipedia_page_url(query)
+        page_urls = search_for_wikipedia_page_url(query, language=language)
         if page_urls is None:
             return {"page_urls": []}
         return {"page_urls": page_urls}
@@ -43,6 +60,8 @@ def explore_relevant_wiki_pages(query: str) -> dict[str, Union[list[str] | str, 
 
 @app.get("/history")
 def get_history() -> dict[str, list[dict[str, str]]]:
+    global chat_history
+    chat_history = load_history() # Reload to ensure freshness if modified externally
     return {"chat_history": chat_history}
 
 
@@ -50,6 +69,7 @@ def get_history() -> dict[str, list[dict[str, str]]]:
 def modify_history(history: list[dict[str, str]]) -> dict[str, str]:
     global chat_history
     chat_history = history
+    save_history(chat_history)
     return {"message": "Chat history updated successfully"}
 
 
@@ -57,4 +77,5 @@ def modify_history(history: list[dict[str, str]]) -> dict[str, str]:
 def clear_history() -> dict[str, str]:
     global chat_history
     chat_history = []
+    save_history(chat_history)
     return {"message": "Chat history cleared successfully"}

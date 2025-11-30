@@ -4,17 +4,30 @@ import os
 
 from agent import WikiAssistantAgent
 from config import USERNAME
-
-wiki_assistant_agent = WikiAssistantAgent()
-
 from utils import get_chat_history, update_chat_history, clear_chat_history
-
 
 # Initialize chat history if it doesn't exist
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 st.title("Wikipedia Chat Assistant")
+
+# Language Selector
+LANGUAGES = {
+    "en": "English",
+    "zh": "Traditional Chinese (繁體中文)",
+    "es": "Spanish (Español)",
+    "fr": "French (Français)",
+    "de": "German (Deutsch)",
+    "ja": "Japanese (日本語)"
+}
+language_code = st.sidebar.selectbox(
+    "Select Wikipedia Language",
+    options=list(LANGUAGES.keys()),
+    format_func=lambda x: LANGUAGES[x],
+    index=0
+)
+
 st.markdown(
     """ Hello {user}! Ask me anything about Wikipedia articles. """.format(
         user=USERNAME
@@ -56,6 +69,10 @@ if prompt := st.chat_input("Say something"):
     with st.chat_message("assistant"):
         past_messages = st.session_state.messages[:-1]  # Exclude current user message
         lm = dspy.LM("gemini/gemini-2.5-flash", api_key=os.getenv("GEMINI_API_KEY"))
+        
+        # Instantiate agent with selected language
+        wiki_assistant_agent = WikiAssistantAgent(language=language_code)
+        
         with dspy.context(lm=lm):
             response = wiki_assistant_agent(
                 question=prompt, past_messages=past_messages
