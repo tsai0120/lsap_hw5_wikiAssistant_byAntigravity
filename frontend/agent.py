@@ -74,5 +74,6 @@ class WikiAssistantAgent(dspy.Module):
             max_iters=self.max_iterations,
         )
 
-    def forward(self, question, past_messages):
+    def forward(self, question, past_messages, language=None):
+        # language argument is accepted for compatibility but self.language from init is used
         return self.agent(past_messages=past_messages, question=question, language=self.language).answer
