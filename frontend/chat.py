@@ -98,6 +98,7 @@ THEMES = {
             border-radius: 6px;
             transition: all 0.2s ease;
             font-weight: 400;
+            margin-bottom: 2px;
         }
         
         [data-testid="stSidebar"] .stButton > button:hover {
@@ -135,11 +136,27 @@ THEMES = {
             box-shadow: none;
         }
         
-        /* Expander (Settings/Folders) */
+        /* Expander (Settings/Folders) - ChatGPT Style */
         .streamlit-expanderHeader {
-            background-color: transparent;
-            color: #e1e1e3;
-            font-weight: 500;
+            background-color: transparent !important;
+            color: #9ca3af !important;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: none !important;
+            padding-left: 0 !important;
+        }
+        .streamlit-expanderHeader:hover {
+            color: #e1e1e3 !important;
+        }
+        .streamlit-expanderContent {
+            border: none !important;
+            padding-left: 10px !important;
+            padding-right: 0 !important;
+        }
+        [data-testid="stExpander"] {
+            border: none !important;
+            box-shadow: none !important;
+            background-color: transparent !important;
         }
         
         /* Dividers */
