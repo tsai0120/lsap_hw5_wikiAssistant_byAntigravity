@@ -72,6 +72,82 @@ LANGUAGES = {
 }
 
 THEMES = {
+    "Claude": """
+        <style>
+        /* General App Styling */
+        .stApp {
+            background-color: #252529; /* Deep charcoal */
+            color: #e1e1e3;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        /* Sidebar Styling */
+        [data-testid="stSidebar"] {
+            background-color: #1e1e21; /* Slightly darker sidebar */
+            border-right: 1px solid #333;
+        }
+        
+        /* Sidebar Buttons (Navigation List Style) */
+        [data-testid="stSidebar"] .stButton > button {
+            width: 100%;
+            background-color: transparent;
+            color: #9ca3af; /* Muted text */
+            border: none;
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-weight: 400;
+        }
+        
+        [data-testid="stSidebar"] .stButton > button:hover {
+            background-color: #2d2d31;
+            color: #e1e1e3;
+        }
+        
+        [data-testid="stSidebar"] .stButton > button:active, 
+        [data-testid="stSidebar"] .stButton > button:focus {
+            background-color: #3a3a3e;
+            color: #ffffff;
+            border: none;
+            box-shadow: none;
+        }
+
+        /* Headers */
+        h1, h2, h3 {
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        
+        /* Chat Input */
+        .stChatInputContainer {
+            padding-bottom: 20px;
+        }
+        .stChatInputContainer textarea {
+            background-color: #2d2d31;
+            color: #e1e1e3;
+            border: 1px solid #3f3f46;
+            border-radius: 12px;
+        }
+        .stChatInputContainer textarea:focus {
+            border-color: #71717a;
+            box-shadow: none;
+        }
+        
+        /* Expander (Settings/Folders) */
+        .streamlit-expanderHeader {
+            background-color: transparent;
+            color: #e1e1e3;
+            font-weight: 500;
+        }
+        
+        /* Dividers */
+        hr {
+            border-color: #3f3f46;
+        }
+        </style>
+    """,
     "Dark": """
         <style>
         .stApp { background-color: #0e1117; color: #fafafa; }
@@ -113,7 +189,7 @@ if "current_session_id" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "theme" not in st.session_state:
-    st.session_state.theme = "Dark"
+    st.session_state.theme = "Claude" # Default to Claude theme
 if "user_avatar" not in st.session_state:
     st.session_state.user_avatar = "👤"
 if "editing_message_index" not in st.session_state:
