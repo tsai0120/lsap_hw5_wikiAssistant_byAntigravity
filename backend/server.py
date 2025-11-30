@@ -41,6 +41,9 @@ def save_data(data):
 
 # Initialize data
 db = load_data()
+if "folders" not in db:
+    db["folders"] = {}
+    save_data(db)
 
 @app.get("/")
 def read_root() -> dict[str, str]:
@@ -69,7 +72,44 @@ def explore_relevant_wiki_pages(query: str, language: str = "en") -> dict[str, U
         return {"error": str(e)}
 
 
-# Session Management Endpoints
+# Session & Folder Management Endpoints
+
+@app.get("/folders")
+def get_folders() -> dict[str, list[dict]]:
+    global db
+    db = load_data()
+    folders_list = []
+    for folder_id, folder_data in db.get("folders", {}).items():
+        folders_list.append({
+            "id": folder_id,
+            "name": folder_data.get("name", "New Folder"),
+            "created_at": folder_data.get("created_at", "")
+        })
+    folders_list.sort(key=lambda x: x["created_at"])
+    return {"folders": folders_list}
+
+@app.post("/folders")
+def create_folder(name: str) -> dict[str, str]:
+    global db
+    folder_id = str(uuid.uuid4())
+    db.setdefault("folders", {})[folder_id] = {
+        "name": name,
+        "created_at": datetime.now().isoformat()
+    }
+    save_data(db)
+    return {"folder_id": folder_id, "name": name}
+
+@app.delete("/folders/{folder_id}")
+def delete_folder(folder_id: str) -> dict:
+    global db
+    if folder_id in db.get("folders", {}):
+        # Move sessions in this folder to root (None)
+        for session in db.get("sessions", {}).values():
+            if session.get("folder_id") == folder_id:
+                session["folder_id"] = None
+        del db["folders"][folder_id]
+        save_data(db)
+    return {"message": "Folder deleted"}
 
 @app.get("/sessions")
 def get_sessions() -> dict[str, list[dict]]:
@@ -80,6 +120,7 @@ def get_sessions() -> dict[str, list[dict]]:
         sessions_list.append({
             "id": session_id,
             "title": session_data.get("title", "New Chat"),
+            "folder_id": session_data.get("folder_id"),
             "created_at": session_data.get("created_at", "")
         })
     # Sort by created_at desc
@@ -87,11 +128,12 @@ def get_sessions() -> dict[str, list[dict]]:
     return {"sessions": sessions_list}
 
 @app.post("/sessions")
-def create_session(title: str = "New Chat") -> dict[str, str]:
+def create_session(title: str = "New Chat", folder_id: Union[str, None] = None) -> dict[str, str]:
     global db
     session_id = str(uuid.uuid4())
     db.setdefault("sessions", {})[session_id] = {
         "title": title,
+        "folder_id": folder_id,
         "messages": [],
         "created_at": datetime.now().isoformat()
     }
@@ -124,6 +166,15 @@ def update_session_title(session_id: str, title: str) -> dict:
     db["sessions"][session_id]["title"] = title
     save_data(db)
     return {"message": "Title updated"}
+
+@app.put("/sessions/{session_id}/folder")
+def update_session_folder(session_id: str, folder_id: Union[str, None]) -> dict:
+    global db
+    if session_id not in db.get("sessions", {}):
+        return {"error": "Session not found"}
+    db["sessions"][session_id]["folder_id"] = folder_id
+    save_data(db)
+    return {"message": "Session folder updated"}
 
 @app.delete("/sessions/{session_id}")
 def delete_session(session_id: str) -> dict:
