@@ -1,5 +1,6 @@
 services:
   backend:
+    container_name: wiki-backend
     build:
       context: ./backend
       dockerfile: ../Dockerfile-backend
@@ -9,6 +10,7 @@ services:
       - ./data:/app/data
 
   frontend:
+    container_name: wiki-frontend
     build:
       context: ./frontend
       dockerfile: ../Dockerfile-frontend
@@ -21,6 +23,7 @@ services:
       - backend
 
   nginx:
+    container_name: wiki-nginx
     image: nginx:latest
     ports:
       - "8080:80"
