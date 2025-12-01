@@ -364,12 +364,16 @@ for i, message in enumerate(st.session_state.messages):
         else:
             st.markdown(message["content"])
             if message["role"] == "user":
-                if st.button("✏️", key=f"edit_{i}"):
-                    st.session_state.editing_message_index = i
-                    st.rerun()
+                # Align edit button to the right
+                _, col_edit = st.columns([0.9, 0.1])
+                with col_edit:
+                    if st.button("✏️", key=f"edit_{i}"):
+                        st.session_state.editing_message_index = i
+                        st.rerun()
 
 # Accept user input
 if prompt := st.chat_input(t["input_placeholder"]):
+    # Add user message
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar=st.session_state.user_avatar):
         st.markdown(prompt)
@@ -398,15 +402,21 @@ if prompt := st.chat_input(t["input_placeholder"]):
         
         wiki_assistant_agent = WikiAssistantAgent(language=language_code)
         
-        with dspy.context(lm=lm):
-            response = wiki_assistant_agent(
-                question=prompt, past_messages=past_messages, language=language_code
-            )
-        st.markdown(response)
-    
-    st.session_state.messages.append({"role": "assistant", "content": response})
-    
-    try:
-        update_session_messages(st.session_state.current_session_id, list(st.session_state.messages))
-    except Exception as e:
-        st.error(f"Error updating chat history: {e}")
+        try:
+            with st.spinner(t["loading"]):
+                with dspy.context(lm=lm):
+                    response = wiki_assistant_agent(
+                        question=prompt, past_messages=past_messages, language=language_code
+                    )
+                st.markdown(response)
+            
+            # Add assistant response
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            
+            # Update backend
+            update_session_messages(st.session_state.current_session_id, list(st.session_state.messages))
+            
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+            # Optionally log the error or provide more details
+            print(f"Error in agent execution: {e}")
